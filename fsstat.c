@@ -4,7 +4,9 @@
 #include <linux/file.h>
 #include <linux/mm.h>
 #include "fsstat.h"
+#include "kernel_feature.h"
 
+#ifndef KERNEL_HAVE_NEW_STAT
 #define INIT_STRUCT_STAT_PADDING(st) memset(&st, 0, sizeof(st))
 
 struct __old_kernel_stat {
@@ -82,3 +84,4 @@ __SYSCALL_DEFINEx(4, _newfstatat, int, dfd, const char __user *, filename,
 		return error;
 	return cp_new_stat(&stat, statbuf);
 }
+#endif

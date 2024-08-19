@@ -5,3 +5,5 @@
 Module.symvers
 *.mod
 modules.order
+kernel_feature.h
+feat_test.syms

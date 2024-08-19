@@ -18,51 +18,15 @@ MODULE_VERSION("0.1.0");
 #include <linux/kallsyms.h>
 #include <linux/syscalls.h>
 
+#include "systable.h"
+
 #define __EXTERN
 #include "fsstat.h"
 #include "signal.h"
 
-#define __ARCH_WANT_SET_GET_RLIMIT
-#define __ARCH_WANT_NEW_STAT
-#undef __SYSCALL
-#define __SYSCALL(nr, call) [nr] = (#call),
-
-const char *sys_call_table_name[__NR_syscalls] = {
-	[0 ... __NR_syscalls - 1] = "sys_ni_syscall",
-#include <asm/unistd.h>
-};
-
 #ifndef __loongarch64
 #error This Linux kernel module is only supported on LoongArch
 #endif
-
-static struct {
-	long syscall_num;
-	void *symbol_addr;
-	void *orig;
-} syscall_to_replace[] = {
-	{ __NR_fstat, sys_newfstat },
-	{ __NR_newfstatat, sys_newfstatat },
-	{ __NR_getrlimit, NULL },
-	{ __NR_setrlimit, NULL },
-	{ __NR_rt_sigprocmask, sys_rt_sigprocmask },
-	{ __NR_rt_sigpending, sys_rt_sigpending },
-	{ __NR_rt_sigtimedwait, sys_rt_sigtimedwait },
-	{ __NR_rt_sigaction, sys_rt_sigaction },
-	{ __NR_rt_sigsuspend, sys_rt_sigsuspend },
-	{ __NR_pselect6, sys_pselect6 },
-	{ __NR_ppoll, sys_ppoll },
-#ifdef CONFIG_SIGNALFD
-	{ __NR_signalfd4, sys_signalfd4 },
-#endif
-#ifdef CONFIG_EPOLL
-	{ __NR_epoll_pwait, sys_epoll_pwait },
-	{ __NR_epoll_pwait2, sys_epoll_pwait2 },
-#endif
-};
-
-#define nr_syscalls_to_replace \
-	(sizeof(syscall_to_replace) / sizeof(syscall_to_replace[0]))
 
 static unsigned long kallsyms_lookup_name_addr = 0;
 static unsigned int allow_mod_unreg = 0;
@@ -253,7 +217,7 @@ static int __init oldsyscall_start(void)
 	if (rc < 0) {
 		return rc;
 	}
-	for (int i = 0; i < nr_syscalls_to_replace; i++) {
+	for (int i = 0; syscall_to_replace[i].syscall_num != -1; i++) {
 		if (syscall_to_replace[i].symbol_addr) {
 			continue;
 		}
@@ -275,7 +239,7 @@ static int __init oldsyscall_start(void)
 			return -EINVAL;
 		}
 	}
-	for (int i = 0; i < nr_syscalls_to_replace; i++) {
+	for (int i = 0; syscall_to_replace[i].syscall_num != -1; i++) {
 		pr_debug("will replace syscall_%ld with %px, orig %px\n",
 			 syscall_to_replace[i].syscall_num,
 			 syscall_to_replace[i].symbol_addr,
@@ -291,7 +255,7 @@ static int __init oldsyscall_start(void)
 
 static void __exit oldsyscall_end(void)
 {
-	for (int i = 0; i < nr_syscalls_to_replace; i++) {
+	for (int i = 0; syscall_to_replace[i].syscall_num != -1; i++) {
 		pr_debug("will restore syscall_%ld to %px\n",
 			 syscall_to_replace[i].syscall_num,
 			 syscall_to_replace[i].orig);
