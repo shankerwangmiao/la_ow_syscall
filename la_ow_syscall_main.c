@@ -36,10 +36,6 @@ const char *sys_call_table_name[__NR_syscalls] = {
 #error This Linux kernel module is only supported on LoongArch
 #endif
 
-#ifdef HAVE_KSYM_ADDR
-#include "ksym_addr.h"
-#endif
-
 static struct {
 	long syscall_num;
 	void *symbol_addr;
@@ -68,20 +64,11 @@ static struct {
 #define nr_syscalls_to_replace \
 	(sizeof(syscall_to_replace) / sizeof(syscall_to_replace[0]))
 
-static unsigned long kallsyms_lookup_name_addr =
-#ifdef HAVE_KSYM_ADDR
-LAOWSYS_KALLSYMS_LOOKUP_NAME_ADDR
-#else
-0
-#endif
-;
+static unsigned long kallsyms_lookup_name_addr = 0;
 static unsigned int allow_mod_unreg = 0;
 
 #include <asm-generic/sections.h>
 
-#ifdef HAVE_KSYM_ADDR
-static int __init find_kallsyms_lookup_name(void){ return 0; }
-#else
 // Taken from https://github.com/zizzu0/LinuxKernelModules/blob/main/FindKallsymsLookupName.c
 #define KPROBE_PRE_HANDLER(fname) \
 	static int __kprobes fname(struct kprobe *p, struct pt_regs *regs)
@@ -172,8 +159,6 @@ static int __init find_kallsyms_lookup_name(void)
 		return -EINVAL;
 	}
 }
-#endif
-
 
 int (*p_vfs_fstatat)(int dfd, const char __user *filename, struct kstat *stat,
 		     int flags);
@@ -203,11 +188,6 @@ static struct {
 #endif
 };
 #define nr_rel_tab (sizeof(relocation_table) / sizeof(relocation_table[0]))
-
-#ifdef HAVE_KSYM_ADDR
-static void **p_sys_call_table = (void **)LAOWSYS_SYS_CALL_TABLE_ADDR;
-static int __init find_sys_call_table(void){ return 0; };
-#else
 
 static void **p_sys_call_table;
 
@@ -247,7 +227,6 @@ static int __init find_sys_call_table(void)
 
 	return -ENOSYS;
 }
-#endif
 
 static int __init oldsyscall_start(void)
 {
@@ -326,7 +305,5 @@ module_exit(oldsyscall_end);
 module_param(allow_mod_unreg, uint, 0000);
 MODULE_PARM_DESC(allow_mod_unreg,
 		 "Allow this module to be unload (Danger! Debug use only)");
-#ifndef HAVE_KSYM_ADDR
 module_param(kallsyms_lookup_name_addr, ulong, 0000);
 MODULE_PARM_DESC(kallsyms_lookup_name_addr, "Address for kallsyms_lookup_name, provide this when unable to find using kprobe");
-#endif
