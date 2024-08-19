@@ -2,6 +2,7 @@
 #include <linux/kernel.h> /* Needed for KERN_INFO */
 #include <linux/init.h> /* Needed for the macros */
 #include <linux/kprobes.h> /* Needed for kprobe calls */
+#include "module_version.h"
 
 ///< The license type -- this affects runtime behavior
 MODULE_LICENSE("GPL");
@@ -13,7 +14,7 @@ MODULE_AUTHOR("Miao Wang");
 MODULE_DESCRIPTION("LoongArch old-world syscall compatibility module");
 
 ///< The version of the module
-MODULE_VERSION("0.1.0");
+MODULE_VERSION(THIS_MODULE_VERSION);
 
 #include <linux/kallsyms.h>
 #include <linux/syscalls.h>

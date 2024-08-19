@@ -7,3 +7,4 @@ Module.symvers
 modules.order
 kernel_feature.h
 feat_test.syms
+module_version.h

@@ -28,6 +28,11 @@ $(obj)/feat_test.syms: $(obj)/feat_test.o
 	@$(kecho) '  GEN     $@'
 	$(Q)$(OBJDUMP) -t --section=.text $< >$@
 
-$(obj)/systable.o $(obj)/fsstat.o: $(obj)/kernel_feature.h
+$(obj)/module_version.h: $(src)/VERSION
+	@$(kecho) '  GEN     $@'
+	$(Q)echo "#define THIS_MODULE_VERSION \"$(shell cat $<)\"" > $@
 
-clean-files += kernel_feature.h feat_test.syms
+$(obj)/systable.o $(obj)/fsstat.o: $(obj)/kernel_feature.h
+$(obj)/la_ow_syscall_main.o: $(obj)/module_version.h
+
+clean-files += kernel_feature.h feat_test.syms module_version.h
