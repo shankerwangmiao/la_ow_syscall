@@ -1,3 +1,9 @@
+liblol-dkms (0.1.1) unstable; urgency=low
+
+  * Release 0.1.1
+
+ -- Miao Wang <shankerwangmiao@gmail.com>  Wed, 18 Sep 2024 23:32:00 +0800
+
 liblol-dkms (0.1.1~pre1) unstable; urgency=low
 
   * Add support for kernel 6.11, where fstat and newfstat are introduced.
